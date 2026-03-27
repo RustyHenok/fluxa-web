@@ -75,12 +75,13 @@ The current scaffold now includes:
 - cookie-backed auth route handlers
 - silent session renewal via `/api/auth/refresh`, proxy recovery, and browser keepalive
 - loading skeletons for route transitions across auth, tasks, task detail, and exports
+- signed-in overview dashboard on `/`
 - live dashboard summary and task list bootstrap on `/tasks`
 - task creation from the web workspace
-- task detail, audit history, and patch flows
+- task detail, audit history, patch, archive, and delete flows
 - export job creation, polling, and result rendering on `/exports`
 
 Next, wire generated client usage and richer app flows around:
 
 - generated contract clients backed by `openapi-fetch` + `openapi-typescript`
-- richer task filters and dashboard polish
+- mobile client scaffolding and richer cross-screen polish
