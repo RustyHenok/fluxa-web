@@ -21,15 +21,33 @@ If your backend checkout lives somewhere else, override the source path:
 BACKEND_OPENAPI_PATH=/path/to/fluxa-backend/openapi/fluxa-openapi.json ./scripts/sync_openapi.sh
 ```
 
+## UI Stack
+
+- `Next.js App Router`
+- `TypeScript`
+- `Tailwind CSS`
+- `shadcn/ui` patterns and primitives
+
 ## Planned Stack
 
 - `Next.js`
 - `TypeScript`
+- `Tailwind CSS`
+- `shadcn/ui`
 - generated API types/client from the synced OpenAPI file
+
+## Local Setup
+
+Install dependencies and start the dev server with:
+
+```bash
+corepack pnpm install
+corepack pnpm dev
+```
 
 ## Next Implementation Step
 
-After the contract is synced, scaffold the app and wire generated client usage around:
+After the scaffold, wire generated client usage around:
 
 - auth and tenant switching
 - task list/detail flows
