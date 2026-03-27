@@ -206,6 +206,18 @@ export const fluxaApi = {
       }),
     );
   },
+  deleteTask(accessToken: string, taskId: string) {
+    return unwrapResponse<void>(
+      client.DELETE("/v1/tasks/{task_id}", {
+        headers: authorizedHeaders(accessToken),
+        params: {
+          path: {
+            task_id: taskId,
+          },
+        },
+      }),
+    );
+  },
   listTaskAudit(accessToken: string, taskId: string) {
     return unwrapResponse<TaskAuditListResponse>(
       client.GET("/v1/tasks/{task_id}/audit", {

@@ -49,6 +49,10 @@ export function formatTaskPriorityLabel(value: TaskPriority) {
   return value.replaceAll("_", " ");
 }
 
+function isValidDateTimeValue(value: string | undefined) {
+  return Boolean(value && !Number.isNaN(Date.parse(value)));
+}
+
 export function parseTaskListQuery(
   raw: Record<string, string | string[] | undefined>,
 ): ListTasksQuery {
@@ -71,6 +75,9 @@ export function parseTaskListQuery(
   const priority = pick("priority");
   const assigneeId = pick("assignee_id")?.trim();
   const cursor = pick("cursor")?.trim();
+  const dueBefore = pick("due_before")?.trim();
+  const dueAfter = pick("due_after")?.trim();
+  const updatedAfter = pick("updated_after")?.trim();
   const limitValue = Number(pick("limit"));
 
   if (q) {
@@ -93,6 +100,18 @@ export function parseTaskListQuery(
     query.cursor = cursor;
   }
 
+  if (isValidDateTimeValue(dueBefore)) {
+    query.due_before = dueBefore;
+  }
+
+  if (isValidDateTimeValue(dueAfter)) {
+    query.due_after = dueAfter;
+  }
+
+  if (isValidDateTimeValue(updatedAfter)) {
+    query.updated_after = updatedAfter;
+  }
+
   if (Number.isFinite(limitValue) && limitValue > 0) {
     query.limit = Math.min(Math.trunc(limitValue), 24);
   }
@@ -101,6 +120,13 @@ export function parseTaskListQuery(
 }
 
 export function countTaskFilters(query: ListTasksQuery) {
-  return [query.q, query.status, query.priority, query.assignee_id].filter(Boolean)
-    .length;
+  return [
+    query.q,
+    query.status,
+    query.priority,
+    query.assignee_id,
+    query.due_before,
+    query.due_after,
+    query.updated_after,
+  ].filter(Boolean).length;
 }

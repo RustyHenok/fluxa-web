@@ -13,7 +13,11 @@ import type {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DEFAULT_TASK_PAGE_SIZE } from "@/lib/tasks";
+import {
+  DEFAULT_TASK_PAGE_SIZE,
+  toDatetimeLocalValue,
+  toIsoDateTimeOrNull,
+} from "@/lib/tasks";
 
 const TASK_STATUSES: Array<{ label: string; value: TaskStatus }> = [
   { label: "Open", value: "open" },
@@ -41,15 +45,21 @@ function buildQueryString({
   cursor,
   limit,
   priority,
+  dueAfter,
+  dueBefore,
   q,
   status,
+  updatedAfter,
 }: {
   assigneeId: string;
   cursor?: string | null;
+  dueAfter: string;
+  dueBefore: string;
   limit: string;
   priority: string;
   q: string;
   status: string;
+  updatedAfter: string;
 }) {
   const params = new URLSearchParams();
 
@@ -67,6 +77,22 @@ function buildQueryString({
 
   if (assigneeId) {
     params.set("assignee_id", assigneeId);
+  }
+
+  const dueAfterIso = toIsoDateTimeOrNull(dueAfter);
+  const dueBeforeIso = toIsoDateTimeOrNull(dueBefore);
+  const updatedAfterIso = toIsoDateTimeOrNull(updatedAfter);
+
+  if (dueAfterIso) {
+    params.set("due_after", dueAfterIso);
+  }
+
+  if (dueBeforeIso) {
+    params.set("due_before", dueBeforeIso);
+  }
+
+  if (updatedAfterIso) {
+    params.set("updated_after", updatedAfterIso);
   }
 
   if (limit && limit !== String(DEFAULT_TASK_PAGE_SIZE)) {
@@ -94,6 +120,15 @@ export function TaskQueryBar({
   const [status, setStatus] = useState(initialQuery.status ?? "");
   const [priority, setPriority] = useState(initialQuery.priority ?? "");
   const [assigneeId, setAssigneeId] = useState(initialQuery.assignee_id ?? "");
+  const [dueAfter, setDueAfter] = useState(
+    toDatetimeLocalValue(initialQuery.due_after ?? null),
+  );
+  const [dueBefore, setDueBefore] = useState(
+    toDatetimeLocalValue(initialQuery.due_before ?? null),
+  );
+  const [updatedAfter, setUpdatedAfter] = useState(
+    toDatetimeLocalValue(initialQuery.updated_after ?? null),
+  );
   const [limit, setLimit] = useState(
     String(initialQuery.limit ?? DEFAULT_TASK_PAGE_SIZE),
   );
@@ -101,6 +136,9 @@ export function TaskQueryBar({
   const activeFilterCount = [
     search.trim(),
     status,
+    dueAfter,
+    dueBefore,
+    updatedAfter,
     priority,
     assigneeId,
   ].filter(Boolean).length;
@@ -121,6 +159,9 @@ export function TaskQueryBar({
         priority,
         q: search,
         status,
+        dueAfter,
+        dueBefore,
+        updatedAfter,
       }),
     );
   }
@@ -130,6 +171,9 @@ export function TaskQueryBar({
     setStatus("");
     setPriority("");
     setAssigneeId("");
+    setDueAfter("");
+    setDueBefore("");
+    setUpdatedAfter("");
     setLimit(String(DEFAULT_TASK_PAGE_SIZE));
     navigate("");
   }
@@ -147,6 +191,9 @@ export function TaskQueryBar({
         priority,
         q: search,
         status,
+        dueAfter,
+        dueBefore,
+        updatedAfter,
       }),
     );
   }
@@ -239,6 +286,41 @@ export function TaskQueryBar({
                 </option>
               ))}
             </select>
+          </label>
+        </div>
+
+        <div className="grid gap-3 xl:grid-cols-3">
+          <label className="block space-y-2">
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Due after
+            </span>
+            <Input
+              onChange={(event) => setDueAfter(event.target.value)}
+              type="datetime-local"
+              value={dueAfter}
+            />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Due before
+            </span>
+            <Input
+              onChange={(event) => setDueBefore(event.target.value)}
+              type="datetime-local"
+              value={dueBefore}
+            />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Updated after
+            </span>
+            <Input
+              onChange={(event) => setUpdatedAfter(event.target.value)}
+              type="datetime-local"
+              value={updatedAfter}
+            />
           </label>
         </div>
 

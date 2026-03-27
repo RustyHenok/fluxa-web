@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CalendarClock, ChevronLeft, UserRound } from "lucide-react";
 
+import { TaskDetailActions } from "@/components/tasks/task-detail-actions";
 import { TaskEditorForm } from "@/components/tasks/task-editor-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -195,6 +196,19 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
             </CardHeader>
             <CardContent>
               <TaskEditorForm members={members} task={task} />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/85">
+            <CardHeader>
+              <CardTitle>Task actions</CardTitle>
+              <CardDescription>
+                Archive work that should leave the active queue, or delete a
+                task entirely when it should no longer exist.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TaskDetailActions task={task} />
             </CardContent>
           </Card>
 

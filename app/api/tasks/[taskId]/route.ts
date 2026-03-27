@@ -41,3 +41,33 @@ export async function PATCH(request: Request, context: RouteContext) {
     return response;
   }
 }
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const session = await resolveServerSession();
+
+  if (!session.accessToken) {
+    const response = NextResponse.json(
+      {
+        error: {
+          code: "unauthorized",
+          message: "You need to sign in before deleting a task.",
+        },
+      },
+      { status: 401 },
+    );
+    applyResolvedSession(response, session);
+    return response;
+  }
+
+  try {
+    const { taskId } = await context.params;
+    await fluxaApi.deleteTask(session.accessToken, taskId);
+    const response = new NextResponse(null, { status: 204 });
+    applyResolvedSession(response, session);
+    return response;
+  } catch (error) {
+    const response = apiErrorResponse(error, "Unable to delete the task right now.");
+    applyResolvedSession(response, session);
+    return response;
+  }
+}

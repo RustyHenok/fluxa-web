@@ -133,6 +133,18 @@ function getActiveMemberLabel(
   return members.find((member) => member.user_id === assigneeId)?.email ?? assigneeId;
 }
 
+function renderDateFilterBadge(label: string, value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  return (
+    <Badge variant="warning">
+      {label}: {formatTaskDateTime(value)}
+    </Badge>
+  );
+}
+
 export default async function TasksPage({ searchParams }: TasksPageProps) {
   const session = await readServerSession();
 
@@ -185,6 +197,9 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
     query.status ?? "",
     query.priority ?? "",
     query.assignee_id ?? "",
+    query.due_after ?? "",
+    query.due_before ?? "",
+    query.updated_after ?? "",
     query.cursor ?? "",
     query.limit ?? DEFAULT_TASK_PAGE_SIZE,
   ].join("|");
@@ -340,6 +355,9 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                     </Badge>
                   ) : null}
                   {assigneeLabel ? <Badge>Assignee: {assigneeLabel}</Badge> : null}
+                  {renderDateFilterBadge("Due after", query.due_after)}
+                  {renderDateFilterBadge("Due before", query.due_before)}
+                  {renderDateFilterBadge("Updated after", query.updated_after)}
                   {activeFilterCount === 0 ? (
                     <Badge>All current tenant tasks</Badge>
                   ) : null}
