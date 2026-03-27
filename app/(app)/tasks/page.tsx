@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   CalendarClock,
   DownloadCloud,
-  Filter,
   Layers3,
   RefreshCcw,
   UsersRound,
@@ -12,6 +11,7 @@ import {
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { CreateTaskForm } from "@/components/tasks/create-task-form";
+import { TaskQueryBar } from "@/components/tasks/task-query-bar";
 import { TenantSwitcher } from "@/components/auth/tenant-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,9 +32,18 @@ import type {
   TaskStatus,
   TenantMemberResponse,
   TenantMembershipResponse,
+  ListTasksQuery,
 } from "@/lib/api/types";
 import { readServerSession } from "@/lib/auth/session";
 import { getApiBaseUrl } from "@/lib/env";
+import {
+  countTaskFilters,
+  DEFAULT_TASK_PAGE_SIZE,
+  formatTaskDateTime,
+  formatTaskPriorityLabel,
+  formatTaskStatusLabel,
+  parseTaskListQuery,
+} from "@/lib/tasks";
 
 const statusBadgeVariant: Record<TaskStatus, "default" | "warning" | "success"> = {
   archived: "default",
@@ -66,33 +75,21 @@ interface ErrorTasksWorkspace {
 
 type TasksWorkspaceState = ReadyTasksWorkspace | ErrorTasksWorkspace;
 
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "No due date";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function describeTaskStatus(task: TaskResponse) {
-  return task.status.replaceAll("_", " ");
-}
-
-async function getTasksWorkspaceState(accessToken: string): Promise<TasksWorkspaceState> {
+async function getTasksWorkspaceState(
+  accessToken: string,
+  query: ListTasksQuery,
+): Promise<TasksWorkspaceState> {
   try {
-    const [me, tenants, summary, taskList] = await Promise.all([
+    const [me, tenants, summary] = await Promise.all([
       fluxaApi.getMe(accessToken),
       fluxaApi.getTenantMemberships(accessToken),
       fluxaApi.getDashboardSummary(accessToken),
-      fluxaApi.listTasks(accessToken, {
-        limit: 6,
-      }),
     ]);
 
-    const members = await fluxaApi.listTenantMembers(accessToken, me.active_tenant.tenant_id);
+    const [taskList, members] = await Promise.all([
+      fluxaApi.listTasks(accessToken, query),
+      fluxaApi.listTenantMembers(accessToken, me.active_tenant.tenant_id),
+    ]);
 
     return {
       kind: "ready",
@@ -117,14 +114,34 @@ async function getTasksWorkspaceState(accessToken: string): Promise<TasksWorkspa
   }
 }
 
-export default async function TasksPage() {
+interface TasksPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function describeTaskStatus(task: TaskResponse) {
+  return formatTaskStatusLabel(task.status);
+}
+
+function getActiveMemberLabel(
+  members: TenantMemberResponse[],
+  assigneeId?: string,
+) {
+  if (!assigneeId) {
+    return null;
+  }
+
+  return members.find((member) => member.user_id === assigneeId)?.email ?? assigneeId;
+}
+
+export default async function TasksPage({ searchParams }: TasksPageProps) {
   const session = await readServerSession();
 
   if (!session.accessToken) {
     redirect("/login");
   }
 
-  const state = await getTasksWorkspaceState(session.accessToken);
+  const query = parseTaskListQuery(await searchParams);
+  const state = await getTasksWorkspaceState(session.accessToken, query);
 
   if (state.kind === "error") {
     return (
@@ -161,6 +178,16 @@ export default async function TasksPage() {
   }
 
   const { me, tenants, summary, taskList, members } = state;
+  const activeFilterCount = countTaskFilters(query);
+  const assigneeLabel = getActiveMemberLabel(members, query.assignee_id);
+  const queryKey = [
+    query.q ?? "",
+    query.status ?? "",
+    query.priority ?? "",
+    query.assignee_id ?? "",
+    query.cursor ?? "",
+    query.limit ?? DEFAULT_TASK_PAGE_SIZE,
+  ].join("|");
   const metrics = [
     { label: "Open", value: summary.open_task_count, tone: "default" as const },
     {
@@ -217,15 +244,15 @@ export default async function TasksPage() {
                 <Badge className="mb-3 w-fit">
                   {me.active_tenant.tenant_name} · {me.active_tenant.role}
                 </Badge>
-              <h1 className="text-4xl font-semibold tracking-[-0.04em]">
-                Contract-aware task dashboard
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-                The summary cards and task list below are fetched from the
-                backend through the typed web API layer. This is the starting
-                point for richer filters, exports, and audit history.
-              </p>
-            </div>
+                <h1 className="text-4xl font-semibold tracking-[-0.04em]">
+                  Contract-aware task dashboard
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
+                  The dashboard shell is now driven by live backend summary
+                  data, query-aware filtering, and cursor pagination through
+                  the generated web API layer.
+                </p>
+              </div>
               <div className="flex gap-3">
                 <Button asChild variant="outline">
                   <Link href="/">
@@ -238,10 +265,6 @@ export default async function TasksPage() {
                     <DownloadCloud className="mr-2 h-4 w-4" />
                     Exports
                   </Link>
-                </Button>
-                <Button variant="outline">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filters next
                 </Button>
               </div>
             </div>
@@ -292,10 +315,62 @@ export default async function TasksPage() {
               </CardHeader>
               <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Layers3 className="h-4 w-4" />
-                Ready for generated TS client follow-up
+                Generated client is now powering this dashboard
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/85">
+              <CardHeader>
+                <CardDescription>Task slice</CardDescription>
+                <CardTitle className="text-2xl">
+                  {taskList.data.length} visible · {query.limit ?? DEFAULT_TASK_PAGE_SIZE} per page
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap gap-2">
+                  {query.q ? <Badge>Search: {query.q}</Badge> : null}
+                  {query.status ? (
+                    <Badge variant="warning">
+                      Status: {formatTaskStatusLabel(query.status)}
+                    </Badge>
+                  ) : null}
+                  {query.priority ? (
+                    <Badge variant="warning">
+                      Priority: {formatTaskPriorityLabel(query.priority)}
+                    </Badge>
+                  ) : null}
+                  {assigneeLabel ? <Badge>Assignee: {assigneeLabel}</Badge> : null}
+                  {activeFilterCount === 0 ? (
+                    <Badge>All current tenant tasks</Badge>
+                  ) : null}
+                </div>
+                <p>
+                  {taskList.next_cursor
+                    ? "A next page cursor is available for this filtered slice."
+                    : "You are looking at the end of the current filtered slice."}
+                </p>
               </CardContent>
             </Card>
           </section>
+
+          <Card className="bg-white/85">
+            <CardHeader>
+              <CardTitle>Task filters</CardTitle>
+              <CardDescription>
+                Search and filter the active tenant task feed without leaving
+                the dashboard shell.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TaskQueryBar
+                key={queryKey}
+                currentCount={taskList.data.length}
+                initialQuery={query}
+                members={members}
+                nextCursor={taskList.next_cursor}
+              />
+            </CardContent>
+          </Card>
 
           <Card className="bg-white/85">
             <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -332,8 +407,9 @@ export default async function TasksPage() {
             <CardContent className="space-y-3">
               {taskList.data.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-border/80 bg-background/70 p-5 text-sm text-muted-foreground">
-                  No tasks yet for this tenant. The next slice can wire create
-                  task, patch flows, and export jobs into this workspace.
+                  {activeFilterCount > 0
+                    ? "No tasks match the current filters yet. Try widening the slice or clearing filters."
+                    : "No tasks yet for this tenant. Use the create form above to start the first slice of work."}
                 </div>
               ) : null}
 
@@ -355,7 +431,7 @@ export default async function TasksPage() {
                     <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                       <span className="inline-flex items-center gap-2">
                         <CalendarClock className="h-4 w-4" />
-                        {formatDateTime(task.due_at)}
+                        {formatTaskDateTime(task.due_at)}
                       </span>
                       <span>{priorityTone[task.priority]}</span>
                     </div>
