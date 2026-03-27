@@ -74,9 +74,10 @@ The current scaffold now includes:
 - live dashboard summary and task list bootstrap on `/tasks`
 - task creation from the web workspace
 - task detail, audit history, and patch flows
+- export job creation, polling, and result rendering on `/exports`
 
 Next, wire generated client usage and richer app flows around:
 
 - refresh rotation and session renewal
-- export job polling and result views
 - generated contract clients
+- richer task filters and dashboard polish

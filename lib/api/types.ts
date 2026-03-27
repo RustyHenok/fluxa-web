@@ -64,6 +64,16 @@ export interface FreeformObject {
   [key: string]: unknown;
 }
 
+export interface TaskFilters {
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assignee_id?: string;
+  due_before?: string;
+  due_after?: string;
+  updated_after?: string;
+  q?: string;
+}
+
 export interface DashboardSummary {
   open_task_count: number;
   in_progress_task_count: number;
@@ -123,6 +133,43 @@ export interface TaskPatchPayload {
   priority?: TaskPriority;
   assignee_id?: string | null;
   due_at?: string | null;
+}
+
+export interface ExportRequest extends TaskFilters {}
+
+export interface TaskExportJobPayload {
+  tenant_id: string;
+  requested_by: string;
+  filters: TaskFilters;
+}
+
+export interface TaskExportJobResult {
+  requested_by: string;
+  generated_at: string;
+  task_count: number;
+  tasks: TaskResponse[];
+}
+
+export interface JobResponse {
+  id: string;
+  tenant_id: string | null;
+  job_type: JobType;
+  status: JobStatus;
+  attempts: number;
+  max_attempts: number;
+  scheduled_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  payload: TaskExportJobPayload | FreeformObject;
+  result_payload: TaskExportJobResult | FreeformObject | null;
+  last_error: string | null;
+}
+
+export interface JobResultResponse {
+  job_id: string;
+  job_type: JobType;
+  finished_at: string | null;
+  result: TaskExportJobResult | FreeformObject;
 }
 
 export interface ListTasksQuery {

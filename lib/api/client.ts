@@ -4,6 +4,9 @@ import type {
   AuthResponse,
   DashboardSummary,
   ErrorEnvelope,
+  ExportRequest,
+  JobResponse,
+  JobResultResponse,
   ListTasksQuery,
   LoginRequest,
   MeResponse,
@@ -172,6 +175,26 @@ export const fluxaApi = {
   },
   listTenantMembers(accessToken: string, tenantId: string) {
     return fluxaRequest<TenantMemberResponse[]>(`/v1/tenants/${tenantId}/members`, {
+      accessToken,
+    });
+  },
+  createTaskExport(accessToken: string, payload: ExportRequest, idempotencyKey: string) {
+    return fluxaRequest<JobResponse>("/v1/exports/tasks", {
+      method: "POST",
+      accessToken,
+      headers: {
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+  getJob(accessToken: string, jobId: string) {
+    return fluxaRequest<JobResponse>(`/v1/jobs/${jobId}`, {
+      accessToken,
+    });
+  },
+  getJobResult(accessToken: string, jobId: string) {
+    return fluxaRequest<JobResultResponse>(`/v1/jobs/${jobId}/result`, {
       accessToken,
     });
   },

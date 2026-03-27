@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   ArrowUpRight,
   CalendarClock,
+  DownloadCloud,
   Filter,
   Layers3,
   RefreshCcw,
@@ -230,6 +231,12 @@ export default async function TasksPage() {
                   <Link href="/">
                     <RefreshCcw className="mr-2 h-4 w-4" />
                     Overview
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/exports">
+                    <DownloadCloud className="mr-2 h-4 w-4" />
+                    Exports
                   </Link>
                 </Button>
                 <Button variant="outline">
