@@ -12,14 +12,16 @@ This repo consumes the REST contract published by `fluxa-backend`.
 Sync the checked-in backend contract into this repo with:
 
 ```bash
-./scripts/sync_openapi.sh
+corepack pnpm sync:openapi
 ```
 
 If your backend checkout lives somewhere else, override the source path:
 
 ```bash
-BACKEND_OPENAPI_PATH=/path/to/fluxa-backend/openapi/fluxa-openapi.json ./scripts/sync_openapi.sh
+BACKEND_OPENAPI_PATH=/path/to/fluxa-backend/openapi/fluxa-openapi.json corepack pnpm sync:openapi
 ```
+
+This sync command copies the OpenAPI file and regenerates the typed schema under `lib/api/generated/schema.ts`.
 
 ## UI Stack
 
@@ -80,5 +82,5 @@ The current scaffold now includes:
 
 Next, wire generated client usage and richer app flows around:
 
-- generated contract clients
+- generated contract clients backed by `openapi-fetch` + `openapi-typescript`
 - richer task filters and dashboard polish

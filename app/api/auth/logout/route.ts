@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { FluxaApiError, fluxaRequest } from "@/lib/api/client";
+import { FluxaApiError, fluxaApi } from "@/lib/api/client";
 import { clearAuthCookies } from "@/lib/auth/cookies";
 import { readServerSession } from "@/lib/auth/session";
 
@@ -10,9 +10,8 @@ export async function POST() {
 
   try {
     if (session.refreshToken) {
-      await fluxaRequest<unknown>("/v1/auth/logout", {
-        method: "POST",
-        body: JSON.stringify({ refresh_token: session.refreshToken }),
+      await fluxaApi.logout({
+        refresh_token: session.refreshToken,
       });
     }
   } catch (error) {
