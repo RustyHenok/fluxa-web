@@ -64,6 +64,9 @@ export default function HomePage() {
             <Button asChild size="lg" variant="outline">
               <Link href="/login">Open auth view</Link>
             </Button>
+            <Button asChild size="lg" variant="ghost">
+              <Link href="/register">Create workspace</Link>
+            </Button>
           </div>
         </div>
 
@@ -109,6 +112,7 @@ export default function HomePage() {
                 </p>
                 <ul className="mt-3 space-y-3 text-sm leading-7">
                   <li>Dashboard summary cards</li>
+                  <li>Cookie-backed auth and tenant switching</li>
                   <li>Tenant switcher</li>
                   <li>Task list with filters and cursor pagination</li>
                   <li>Export job polling + result retrieval</li>

@@ -42,14 +42,40 @@ Install dependencies and start the dev server with:
 
 ```bash
 corepack pnpm install
+cp .env.example .env.local
 corepack pnpm dev
 ```
 
+Build and lint with:
+
+```bash
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm build
+```
+
+## Environment
+
+- `FLUXA_API_BASE_URL`
+  - server-side URL used by the Next.js BFF routes and server components
+- `NEXT_PUBLIC_FLUXA_API_BASE_URL`
+  - optional browser-readable mirror for later client-side fetches
+
+For local development the scaffold defaults to `http://127.0.0.1:18080`.
+
 ## Next Implementation Step
 
-After the scaffold, wire generated client usage around:
+The current scaffold now includes:
 
-- auth and tenant switching
-- task list/detail flows
-- export job polling
-- dashboard summary
+- `pnpm`-based Next.js app setup
+- `Tailwind CSS` + `shadcn/ui` primitives
+- typed REST client wrappers around the synced backend contract
+- cookie-backed auth route handlers
+- live dashboard summary and task list bootstrap on `/tasks`
+
+Next, wire generated client usage and richer app flows around:
+
+- refresh rotation and session renewal
+- task detail, create, and patch flows
+- export job polling and result views
+- members and audit history

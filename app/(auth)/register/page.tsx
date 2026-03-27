@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { LoginForm } from "@/components/auth/login-form";
+import { RegisterForm } from "@/components/auth/register-form";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { readServerSession } from "@/lib/auth/session";
 
-export default async function LoginPage() {
+export default async function RegisterPage() {
   const session = await readServerSession();
 
   if (session.accessToken) {
@@ -21,15 +21,14 @@ export default async function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <Card className="w-full max-w-md bg-white/85">
         <CardHeader>
-          <CardTitle>Welcome back to Fluxa</CardTitle>
+          <CardTitle>Launch a new Fluxa workspace</CardTitle>
           <CardDescription>
-            This login view talks to the backend through a cookie-backed BFF
-            layer so the browser never needs to hold the long-lived refresh
-            token itself.
+            This flow issues the real backend session and drops you into the
+            tenant-aware task workspace right away.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <RegisterForm />
         </CardContent>
       </Card>
     </main>
