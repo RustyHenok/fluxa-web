@@ -60,6 +60,10 @@ export interface TenantMemberResponse {
   joined_at: string;
 }
 
+export interface FreeformObject {
+  [key: string]: unknown;
+}
+
 export interface DashboardSummary {
   open_task_count: number;
   in_progress_task_count: number;
@@ -88,6 +92,39 @@ export interface TaskListResponse {
   next_cursor: string | null;
 }
 
+export interface TaskAuditResponse {
+  id: string;
+  task_id: string | null;
+  tenant_id: string;
+  actor_user_id: string;
+  event_type: string;
+  payload: FreeformObject;
+  created_at: string;
+}
+
+export interface TaskAuditListResponse {
+  data: TaskAuditResponse[];
+  next_cursor: string | null;
+}
+
+export interface TaskPayload {
+  title: string;
+  description?: string | null;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assignee_id?: string | null;
+  due_at?: string | null;
+}
+
+export interface TaskPatchPayload {
+  title?: string;
+  description?: string | null;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assignee_id?: string | null;
+  due_at?: string | null;
+}
+
 export interface ListTasksQuery {
   limit?: number;
   cursor?: string;
@@ -99,4 +136,3 @@ export interface ListTasksQuery {
   updated_after?: string;
   q?: string;
 }
-

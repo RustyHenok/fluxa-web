@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { CreateTaskForm } from "@/components/tasks/create-task-form";
 import { TenantSwitcher } from "@/components/auth/tenant-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import type {
   TaskPriority,
   TaskResponse,
   TaskStatus,
+  TenantMemberResponse,
   TenantMembershipResponse,
 } from "@/lib/api/types";
 import { readServerSession } from "@/lib/auth/session";
@@ -53,6 +55,7 @@ interface ReadyTasksWorkspace {
   tenants: TenantMembershipResponse[];
   summary: DashboardSummary;
   taskList: TaskListResponse;
+  members: TenantMemberResponse[];
 }
 
 interface ErrorTasksWorkspace {
@@ -88,12 +91,15 @@ async function getTasksWorkspaceState(accessToken: string): Promise<TasksWorkspa
       }),
     ]);
 
+    const members = await fluxaApi.listTenantMembers(accessToken, me.active_tenant.tenant_id);
+
     return {
       kind: "ready",
       me,
       tenants,
       summary,
       taskList,
+      members,
     };
   } catch (error) {
     if (error instanceof FluxaApiError && error.status === 401) {
@@ -153,7 +159,7 @@ export default async function TasksPage() {
     );
   }
 
-  const { me, tenants, summary, taskList } = state;
+  const { me, tenants, summary, taskList, members } = state;
   const metrics = [
     { label: "Open", value: summary.open_task_count, tone: "default" as const },
     {
@@ -204,12 +210,12 @@ export default async function TasksPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <Badge className="mb-3 w-fit">
-                {me.active_tenant.tenant_name} · {me.active_tenant.role}
-              </Badge>
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <Badge className="mb-3 w-fit">
+                  {me.active_tenant.tenant_name} · {me.active_tenant.role}
+                </Badge>
               <h1 className="text-4xl font-semibold tracking-[-0.04em]">
                 Contract-aware task dashboard
               </h1>
@@ -219,19 +225,19 @@ export default async function TasksPage() {
                 point for richer filters, exports, and audit history.
               </p>
             </div>
-            <div className="flex gap-3">
-              <Button asChild variant="outline">
-                <Link href="/">
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  Overview
-                </Link>
-              </Button>
-              <Button variant="outline">
-                <Filter className="mr-2 h-4 w-4" />
-                Filters next
-              </Button>
+              <div className="flex gap-3">
+                <Button asChild variant="outline">
+                  <Link href="/">
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Overview
+                  </Link>
+                </Button>
+                <Button variant="outline">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters next
+                </Button>
+              </div>
             </div>
-          </div>
 
           <section className="grid gap-4 md:grid-cols-3">
             {metrics.map((metric) => (
@@ -287,6 +293,25 @@ export default async function TasksPage() {
           <Card className="bg-white/85">
             <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
+                <CardTitle>Create task</CardTitle>
+                <CardDescription>
+                  This form posts through the web BFF route with an
+                  `Idempotency-Key` and then opens the new task detail page.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <UsersRound className="h-4 w-4" />
+                {members.length} members available for assignment
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CreateTaskForm members={members} />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/85">
+            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
                 <CardTitle>Task feed</CardTitle>
                 <CardDescription>
                   The first live tenant-scoped task slice from the backend.
@@ -309,10 +334,10 @@ export default async function TasksPage() {
                 <div
                   key={task.id}
                   className="flex flex-col gap-3 rounded-[24px] border border-border/80 bg-background/80 p-5 md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-semibold">{task.title}</h2>
+                  >
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-lg font-semibold">{task.title}</h2>
                       <Badge variant={statusBadgeVariant[task.status]}>
                         {describeTaskStatus(task)}
                       </Badge>
@@ -327,14 +352,14 @@ export default async function TasksPage() {
                       </span>
                       <span>{priorityTone[task.priority]}</span>
                     </div>
+                    </div>
+                    <Button asChild variant="outline">
+                      <Link href={`/tasks/${task.id}`}>
+                        Open task
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
-                  <Button asChild variant="outline">
-                    <Link href="/">
-                      View details next
-                      <ArrowUpRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
               ))}
             </CardContent>
           </Card>

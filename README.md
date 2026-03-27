@@ -72,10 +72,11 @@ The current scaffold now includes:
 - typed REST client wrappers around the synced backend contract
 - cookie-backed auth route handlers
 - live dashboard summary and task list bootstrap on `/tasks`
+- task creation from the web workspace
+- task detail, audit history, and patch flows
 
 Next, wire generated client usage and richer app flows around:
 
 - refresh rotation and session renewal
-- task detail, create, and patch flows
 - export job polling and result views
-- members and audit history
+- generated contract clients

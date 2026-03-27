@@ -8,7 +8,12 @@ import type {
   LoginRequest,
   MeResponse,
   RegisterRequest,
+  TaskAuditListResponse,
+  TaskPatchPayload,
+  TaskPayload,
+  TaskResponse,
   TaskListResponse,
+  TenantMemberResponse,
   TenantMembershipResponse,
 } from "./types";
 
@@ -136,6 +141,38 @@ export const fluxaApi = {
     return fluxaRequest<TaskListResponse>("/v1/tasks", {
       accessToken,
       query,
+    });
+  },
+  getTask(accessToken: string, taskId: string) {
+    return fluxaRequest<TaskResponse>(`/v1/tasks/${taskId}`, {
+      accessToken,
+    });
+  },
+  createTask(accessToken: string, payload: TaskPayload, idempotencyKey: string) {
+    return fluxaRequest<TaskResponse>("/v1/tasks", {
+      method: "POST",
+      accessToken,
+      headers: {
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+  updateTask(accessToken: string, taskId: string, payload: TaskPatchPayload) {
+    return fluxaRequest<TaskResponse>(`/v1/tasks/${taskId}`, {
+      method: "PATCH",
+      accessToken,
+      body: JSON.stringify(payload),
+    });
+  },
+  listTaskAudit(accessToken: string, taskId: string) {
+    return fluxaRequest<TaskAuditListResponse>(`/v1/tasks/${taskId}/audit`, {
+      accessToken,
+    });
+  },
+  listTenantMembers(accessToken: string, tenantId: string) {
+    return fluxaRequest<TenantMemberResponse[]>(`/v1/tenants/${tenantId}/members`, {
+      accessToken,
     });
   },
 };
