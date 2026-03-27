@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { ACCESS_COOKIE_NAME } from "@/lib/auth/cookies";
 
 export function proxy(request: NextRequest) {
-  const hasSession = request.cookies.has(ACCESS_COOKIE_NAME);
+  const hasSession = Boolean(request.cookies.get(ACCESS_COOKIE_NAME)?.value);
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/tasks") && !hasSession) {

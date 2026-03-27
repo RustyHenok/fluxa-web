@@ -16,7 +16,7 @@ function cookieOptions(maxAge?: number) {
     path: "/",
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
-    ...(maxAge ? { maxAge } : {}),
+    ...(typeof maxAge === "number" ? { maxAge } : {}),
   };
 }
 
@@ -49,7 +49,12 @@ export function applyAuthCookies(response: NextResponse, auth: AuthResponse) {
 }
 
 export function clearAuthCookies(response: NextResponse) {
-  response.cookies.set(ACCESS_COOKIE_NAME, "", cookieOptions(0));
-  response.cookies.set(REFRESH_COOKIE_NAME, "", cookieOptions(0));
-  response.cookies.set(ACTIVE_TENANT_COOKIE_NAME, "", cookieOptions(0));
+  const expiredCookie = {
+    ...cookieOptions(0),
+    expires: new Date(0),
+  };
+
+  response.cookies.set(ACCESS_COOKIE_NAME, "", expiredCookie);
+  response.cookies.set(REFRESH_COOKIE_NAME, "", expiredCookie);
+  response.cookies.set(ACTIVE_TENANT_COOKIE_NAME, "", expiredCookie);
 }

@@ -1,26 +1,27 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState } from "react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
 
 export function LogoutButton(props: ButtonProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   return (
     <Button
       {...props}
       disabled={isPending || props.disabled}
-      onClick={() => {
-        startTransition(async () => {
+      onClick={async () => {
+        setIsPending(true);
+
+        try {
           await fetch("/api/auth/logout", {
             method: "POST",
           });
-          router.push("/login");
-          router.refresh();
-        });
+          window.location.assign("/login");
+        } finally {
+          setIsPending(false);
+        }
       }}
     >
       {isPending ? "Signing out..." : props.children ?? "Sign out"}

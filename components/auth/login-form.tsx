@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ function getFriendlyError(message: string) {
 }
 
 export function LoginForm() {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("owner@example.com");
   const [password, setPassword] = useState("supersecret123");
@@ -55,8 +53,7 @@ export function LoginForm() {
         return;
       }
 
-      router.push("/tasks");
-      router.refresh();
+      window.location.assign("/tasks");
     });
   }
 
