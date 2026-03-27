@@ -10,6 +10,7 @@ import type {
   ListTasksQuery,
   LoginRequest,
   MeResponse,
+  RefreshRequest,
   RegisterRequest,
   TaskAuditListResponse,
   TaskPatchPayload,
@@ -114,6 +115,12 @@ export const fluxaApi = {
   },
   register(payload: RegisterRequest) {
     return fluxaRequest<AuthResponse>("/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  refresh(payload: RefreshRequest) {
+    return fluxaRequest<AuthResponse>("/v1/auth/refresh", {
       method: "POST",
       body: JSON.stringify(payload),
     });

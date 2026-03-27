@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 import { FluxaApiError, fluxaApi } from "@/lib/api/client";
 import type { SwitchTenantRequest } from "@/lib/api/types";
-import { applyAuthCookies, readServerSession } from "@/lib/auth/session";
+import { applyAuthCookies } from "@/lib/auth/cookies";
+import { applyResolvedSession, resolveServerSession } from "@/lib/auth/session";
 
 function errorResponse(error: unknown) {
   if (error instanceof FluxaApiError) {
@@ -29,10 +30,10 @@ function errorResponse(error: unknown) {
 }
 
 export async function POST(request: Request) {
-  const session = await readServerSession();
+  const session = await resolveServerSession();
 
   if (!session.accessToken) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error: {
           code: "unauthorized",
@@ -41,6 +42,8 @@ export async function POST(request: Request) {
       },
       { status: 401 },
     );
+    applyResolvedSession(response, session);
+    return response;
   }
 
   try {
@@ -57,6 +60,8 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    return errorResponse(error);
+    const response = errorResponse(error);
+    applyResolvedSession(response, session);
+    return response;
   }
 }

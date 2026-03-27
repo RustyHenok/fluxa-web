@@ -71,6 +71,8 @@ The current scaffold now includes:
 - `Tailwind CSS` + `shadcn/ui` primitives
 - typed REST client wrappers around the synced backend contract
 - cookie-backed auth route handlers
+- silent session renewal via `/api/auth/refresh`, proxy recovery, and browser keepalive
+- loading skeletons for route transitions across auth, tasks, task detail, and exports
 - live dashboard summary and task list bootstrap on `/tasks`
 - task creation from the web workspace
 - task detail, audit history, and patch flows
@@ -78,6 +80,5 @@ The current scaffold now includes:
 
 Next, wire generated client usage and richer app flows around:
 
-- refresh rotation and session renewal
 - generated contract clients
 - richer task filters and dashboard polish

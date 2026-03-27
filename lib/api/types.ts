@@ -48,6 +48,11 @@ export interface SwitchTenantRequest {
   tenant_id: string;
 }
 
+export interface RefreshRequest {
+  refresh_token: string;
+  tenant_id?: string | null;
+}
+
 export interface MeResponse {
   user: UserResponse;
   active_tenant: TenantMembershipResponse;

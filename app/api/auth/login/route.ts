@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { FluxaApiError, fluxaApi } from "@/lib/api/client";
 import type { LoginRequest } from "@/lib/api/types";
-import { applyAuthCookies } from "@/lib/auth/session";
+import { applyAuthCookies } from "@/lib/auth/cookies";
 
 function errorResponse(error: unknown) {
   if (error instanceof FluxaApiError) {

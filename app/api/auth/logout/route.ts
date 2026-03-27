@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { FluxaApiError, fluxaRequest } from "@/lib/api/client";
-import { clearAuthCookies, readServerSession } from "@/lib/auth/session";
+import { clearAuthCookies } from "@/lib/auth/cookies";
+import { readServerSession } from "@/lib/auth/session";
 
 export async function POST() {
   const session = await readServerSession();

@@ -1,23 +1,24 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-
 import type { AuthResponse } from "@/lib/api/types";
 
 import {
   ACCESS_COOKIE_NAME,
   ACTIVE_TENANT_COOKIE_NAME,
-  REFRESH_COOKIE_MAX_AGE_SECONDS,
   REFRESH_COOKIE_NAME,
+  applyAuthCookies,
+  clearAuthCookies,
 } from "./cookies";
+import { isRefreshExpired, refreshSessionWithToken } from "./refresh";
 
-function cookieOptions(maxAge?: number) {
-  return {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
-    ...(typeof maxAge === "number" ? { maxAge } : {}),
-  };
+export interface ServerSession {
+  accessToken: string | null;
+  refreshToken: string | null;
+  activeTenantId: string | null;
+}
+
+export interface ResolvedServerSession extends ServerSession {
+  refreshedAuth: AuthResponse | null;
+  shouldClearCookies: boolean;
 }
 
 export async function readServerSession() {
@@ -30,31 +31,58 @@ export async function readServerSession() {
   };
 }
 
-export function applyAuthCookies(response: NextResponse, auth: AuthResponse) {
-  response.cookies.set(
-    ACCESS_COOKIE_NAME,
-    auth.access_token,
-    cookieOptions(auth.expires_in_seconds),
-  );
-  response.cookies.set(
-    REFRESH_COOKIE_NAME,
-    auth.refresh_token,
-    cookieOptions(REFRESH_COOKIE_MAX_AGE_SECONDS),
-  );
-  response.cookies.set(
-    ACTIVE_TENANT_COOKIE_NAME,
-    auth.active_tenant.tenant_id,
-    cookieOptions(REFRESH_COOKIE_MAX_AGE_SECONDS),
-  );
+export async function resolveServerSession(): Promise<ResolvedServerSession> {
+  const session = await readServerSession();
+
+  if (session.accessToken) {
+    return {
+      ...session,
+      refreshedAuth: null,
+      shouldClearCookies: false,
+    };
+  }
+
+  if (!session.refreshToken) {
+    return {
+      ...session,
+      refreshedAuth: null,
+      shouldClearCookies: false,
+    };
+  }
+
+  try {
+    const auth = await refreshSessionWithToken(
+      session.refreshToken,
+      session.activeTenantId,
+    );
+
+    return {
+      accessToken: auth.access_token,
+      refreshToken: auth.refresh_token,
+      activeTenantId: auth.active_tenant.tenant_id,
+      refreshedAuth: auth,
+      shouldClearCookies: false,
+    };
+  } catch (error) {
+    return {
+      accessToken: null,
+      refreshToken: session.refreshToken,
+      activeTenantId: session.activeTenantId,
+      refreshedAuth: null,
+      shouldClearCookies: isRefreshExpired(error),
+    };
+  }
 }
 
-export function clearAuthCookies(response: NextResponse) {
-  const expiredCookie = {
-    ...cookieOptions(0),
-    expires: new Date(0),
-  };
+export function applyResolvedSession(
+  response: import("next/server").NextResponse,
+  session: ResolvedServerSession,
+) {
+  if (session.refreshedAuth) {
+    applyAuthCookies(response, session.refreshedAuth);
+  }
 
-  response.cookies.set(ACCESS_COOKIE_NAME, "", expiredCookie);
-  response.cookies.set(REFRESH_COOKIE_NAME, "", expiredCookie);
-  response.cookies.set(ACTIVE_TENANT_COOKIE_NAME, "", expiredCookie);
+  if (session.shouldClearCookies) {
+    clearAuthCookies(response);
+  }
 }

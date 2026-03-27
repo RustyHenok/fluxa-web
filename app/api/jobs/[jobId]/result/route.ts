@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { fluxaApi } from "@/lib/api/client";
 import { apiErrorResponse } from "@/lib/api/errors";
-import { readServerSession } from "@/lib/auth/session";
+import { applyResolvedSession, resolveServerSession } from "@/lib/auth/session";
 
 interface RouteContext {
   params: Promise<{
@@ -11,10 +11,10 @@ interface RouteContext {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const session = await readServerSession();
+  const session = await resolveServerSession();
 
   if (!session.accessToken) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error: {
           code: "unauthorized",
@@ -23,13 +23,19 @@ export async function GET(_request: Request, context: RouteContext) {
       },
       { status: 401 },
     );
+    applyResolvedSession(response, session);
+    return response;
   }
 
   try {
     const { jobId } = await context.params;
     const result = await fluxaApi.getJobResult(session.accessToken, jobId);
-    return NextResponse.json(result);
+    const response = NextResponse.json(result);
+    applyResolvedSession(response, session);
+    return response;
   } catch (error) {
-    return apiErrorResponse(error, "Unable to load the job result right now.");
+    const response = apiErrorResponse(error, "Unable to load the job result right now.");
+    applyResolvedSession(response, session);
+    return response;
   }
 }
