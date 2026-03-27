@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { FluxaApiError, fluxaApi } from "@/lib/api/client";
+import { fluxaApi } from "@/lib/api/client";
 import { clearAuthCookies } from "@/lib/auth/cookies";
 import { readServerSession } from "@/lib/auth/session";
 
@@ -14,18 +14,9 @@ export async function POST() {
         refresh_token: session.refreshToken,
       });
     }
-  } catch (error) {
-    if (!(error instanceof FluxaApiError)) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "internal_error",
-            message: "Unable to end the session right now.",
-          },
-        },
-        { status: 500 },
-      );
-    }
+  } catch {
+    // Backend token revocation is best-effort here. The browser session should
+    // still be terminated even if the upstream logout request fails.
   }
 
   clearAuthCookies(response);

@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
     try {
       const auth = await refreshSessionWithToken(refreshToken, activeTenantId);
       const response = isAuthRoute
-        ? NextResponse.redirect(new URL("/tasks", request.url))
+        ? NextResponse.redirect(new URL("/", request.url))
         : NextResponse.next();
       applyAuthCookies(response, auth);
       return response;
@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAuthRoute && accessToken) {
-    return NextResponse.redirect(new URL("/tasks", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

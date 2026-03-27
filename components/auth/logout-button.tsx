@@ -18,7 +18,7 @@ export function LogoutButton(props: ButtonProps) {
           await fetch("/api/auth/logout", {
             method: "POST",
           });
-          window.location.assign("/login");
+          window.location.assign("/");
         } finally {
           setIsPending(false);
         }
