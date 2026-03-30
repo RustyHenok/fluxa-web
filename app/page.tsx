@@ -350,6 +350,12 @@ function SignedInOverview({
                 </Link>
               </Button>
               <Button asChild variant="outline">
+                <Link href="/projects">
+                  <Layers3 className="mr-2 h-4 w-4" />
+                  Projects
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
                 <Link href="/exports">
                   <DownloadCloud className="mr-2 h-4 w-4" />
                   Exports

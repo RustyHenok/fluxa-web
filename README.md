@@ -74,11 +74,12 @@ The current scaffold now includes:
 - typed REST client wrappers around the synced backend contract
 - cookie-backed auth route handlers
 - silent session renewal via `/api/auth/refresh`, proxy recovery, and browser keepalive
-- loading skeletons for route transitions across auth, tasks, task detail, and exports
+- loading skeletons for route transitions across auth, tasks, task detail, exports, and projects
 - signed-in overview dashboard on `/`
 - live dashboard summary and task list bootstrap on `/tasks`
+- project list, detail, summary, create, edit, and delete flows on `/projects`
 - task creation from the web workspace
-- task detail, audit history, patch, archive, and delete flows
+- task detail, audit history, patch, archive, delete, and project reassignment flows
 - export job creation, polling, and result rendering on `/exports`
 
 Next, wire generated client usage and richer app flows around:

@@ -17,6 +17,10 @@ export type LoginRequest = components["schemas"]["LoginRequest"];
 export type LogoutRequest = components["schemas"]["LogoutRequest"];
 export type MeResponse = components["schemas"]["MeResponse"];
 export type MembershipRole = components["schemas"]["MembershipRole"];
+export type ProjectPatchPayload = components["schemas"]["ProjectPatchPayload"];
+export type ProjectPayload = components["schemas"]["ProjectPayload"];
+export type ProjectResponse = components["schemas"]["ProjectResponse"];
+export type ProjectSummary = components["schemas"]["ProjectSummary"];
 export type RefreshRequest = components["schemas"]["RefreshRequest"];
 export type RegisterRequest = components["schemas"]["RegisterRequest"];
 export type SwitchTenantRequest = components["schemas"]["SwitchTenantRequest"];
@@ -39,4 +43,7 @@ export type ListTasksQuery = NonNullable<
 >;
 export type ListTaskAuditQuery = NonNullable<
   paths["/v1/tasks/{task_id}/audit"]["get"]["parameters"]["query"]
+>;
+export type ListProjectTasksQuery = NonNullable<
+  paths["/v1/projects/{project_id}/tasks"]["get"]["parameters"]["query"]
 >;

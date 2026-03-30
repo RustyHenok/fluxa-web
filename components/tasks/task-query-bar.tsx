@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import type {
   ListTasksQuery,
+  ProjectResponse,
   TaskPriority,
   TaskStatus,
   TenantMemberResponse,
@@ -37,6 +38,7 @@ interface TaskQueryBarProps {
   currentCount: number;
   initialQuery: ListTasksQuery;
   members: TenantMemberResponse[];
+  projects: ProjectResponse[];
   nextCursor: string | null;
 }
 
@@ -45,6 +47,7 @@ function buildQueryString({
   cursor,
   limit,
   priority,
+  projectId,
   dueAfter,
   dueBefore,
   q,
@@ -57,6 +60,7 @@ function buildQueryString({
   dueBefore: string;
   limit: string;
   priority: string;
+  projectId: string;
   q: string;
   status: string;
   updatedAfter: string;
@@ -73,6 +77,10 @@ function buildQueryString({
 
   if (priority) {
     params.set("priority", priority);
+  }
+
+  if (projectId) {
+    params.set("project_id", projectId);
   }
 
   if (assigneeId) {
@@ -110,6 +118,7 @@ export function TaskQueryBar({
   currentCount,
   initialQuery,
   members,
+  projects,
   nextCursor,
 }: TaskQueryBarProps) {
   const router = useRouter();
@@ -119,6 +128,7 @@ export function TaskQueryBar({
   const [search, setSearch] = useState(initialQuery.q ?? "");
   const [status, setStatus] = useState(initialQuery.status ?? "");
   const [priority, setPriority] = useState(initialQuery.priority ?? "");
+  const [projectId, setProjectId] = useState(initialQuery.project_id ?? "");
   const [assigneeId, setAssigneeId] = useState(initialQuery.assignee_id ?? "");
   const [dueAfter, setDueAfter] = useState(
     toDatetimeLocalValue(initialQuery.due_after ?? null),
@@ -140,6 +150,7 @@ export function TaskQueryBar({
     dueBefore,
     updatedAfter,
     priority,
+    projectId,
     assigneeId,
   ].filter(Boolean).length;
 
@@ -157,6 +168,7 @@ export function TaskQueryBar({
         assigneeId,
         limit,
         priority,
+        projectId,
         q: search,
         status,
         dueAfter,
@@ -170,6 +182,7 @@ export function TaskQueryBar({
     setSearch("");
     setStatus("");
     setPriority("");
+    setProjectId("");
     setAssigneeId("");
     setDueAfter("");
     setDueBefore("");
@@ -189,6 +202,7 @@ export function TaskQueryBar({
         cursor: nextCursor,
         limit,
         priority,
+        projectId,
         q: search,
         status,
         dueAfter,
@@ -201,7 +215,7 @@ export function TaskQueryBar({
   return (
     <div className="space-y-4">
       <form className="space-y-4" onSubmit={handleApply}>
-        <div className="grid gap-3 xl:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))]">
+        <div className="grid gap-3 xl:grid-cols-[1.4fr_repeat(5,minmax(0,1fr))]">
           <label className="block space-y-2">
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Search
@@ -248,6 +262,24 @@ export function TaskQueryBar({
               {TASK_PRIORITIES.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Project
+            </span>
+            <select
+              className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm text-foreground outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              onChange={(event) => setProjectId(event.target.value)}
+              value={projectId}
+            >
+              <option value="">All projects</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
                 </option>
               ))}
             </select>

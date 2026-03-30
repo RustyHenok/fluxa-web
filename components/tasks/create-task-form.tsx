@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import type {
+  ProjectResponse,
   TaskPayload,
   TaskPriority,
   TaskStatus,
@@ -19,14 +20,21 @@ const TASK_PRIORITIES: TaskPriority[] = ["low", "medium", "high", "urgent"];
 
 interface CreateTaskFormProps {
   members: TenantMemberResponse[];
+  projects: ProjectResponse[];
+  initialProjectId?: string;
 }
 
 function labelize(value: string) {
   return value.replaceAll("_", " ");
 }
 
-export function CreateTaskForm({ members }: CreateTaskFormProps) {
+export function CreateTaskForm({
+  members,
+  projects,
+  initialProjectId,
+}: CreateTaskFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [projectId, setProjectId] = useState(initialProjectId ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>("open");
@@ -36,6 +44,7 @@ export function CreateTaskForm({ members }: CreateTaskFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   function resetForm() {
+    setProjectId(initialProjectId ?? "");
     setTitle("");
     setDescription("");
     setStatus("open");
@@ -55,6 +64,7 @@ export function CreateTaskForm({ members }: CreateTaskFormProps) {
     setError(null);
 
     const payload: TaskPayload = {
+      project_id: projectId || null,
       title: title.trim(),
       description: description.trim() || null,
       status,
@@ -108,6 +118,22 @@ export function CreateTaskForm({ members }: CreateTaskFormProps) {
       </label>
 
       <div className="grid gap-4 md:grid-cols-2">
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Project</span>
+          <select
+            className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm"
+            value={projectId}
+            onChange={(event) => setProjectId(event.target.value)}
+          >
+            <option value="">No project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <label className="block space-y-2">
           <span className="text-sm font-medium">Status</span>
           <select

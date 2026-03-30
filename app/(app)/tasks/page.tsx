@@ -26,6 +26,7 @@ import { FluxaApiError, fluxaApi } from "@/lib/api/client";
 import type {
   DashboardSummary,
   MeResponse,
+  ProjectResponse,
   TaskListResponse,
   TaskPriority,
   TaskResponse,
@@ -62,6 +63,7 @@ const priorityTone: Record<TaskPriority, string> = {
 interface ReadyTasksWorkspace {
   kind: "ready";
   me: MeResponse;
+  projects: ProjectResponse[];
   tenants: TenantMembershipResponse[];
   summary: DashboardSummary;
   taskList: TaskListResponse;
@@ -86,14 +88,16 @@ async function getTasksWorkspaceState(
       fluxaApi.getDashboardSummary(accessToken),
     ]);
 
-    const [taskList, members] = await Promise.all([
+    const [taskList, members, projects] = await Promise.all([
       fluxaApi.listTasks(accessToken, query),
       fluxaApi.listTenantMembers(accessToken, me.active_tenant.tenant_id),
+      fluxaApi.listProjects(accessToken),
     ]);
 
     return {
       kind: "ready",
       me,
+      projects,
       tenants,
       summary,
       taskList,
@@ -189,13 +193,15 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
     );
   }
 
-  const { me, tenants, summary, taskList, members } = state;
+  const { me, projects, tenants, summary, taskList, members } = state;
   const activeFilterCount = countTaskFilters(query);
   const assigneeLabel = getActiveMemberLabel(members, query.assignee_id);
+  const activeProject = projects.find((project) => project.id === query.project_id);
   const queryKey = [
     query.q ?? "",
     query.status ?? "",
     query.priority ?? "",
+    query.project_id ?? "",
     query.assignee_id ?? "",
     query.due_after ?? "",
     query.due_before ?? "",
@@ -281,6 +287,12 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                     Exports
                   </Link>
                 </Button>
+                <Button asChild variant="outline">
+                  <Link href="/projects">
+                    <Layers3 className="mr-2 h-4 w-4" />
+                    Projects
+                  </Link>
+                </Button>
               </div>
             </div>
 
@@ -336,6 +348,17 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
 
             <Card className="bg-white/85">
               <CardHeader>
+                <CardDescription>Projects in tenant</CardDescription>
+                <CardTitle className="text-2xl">{projects.length}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Project hierarchy is now available directly from the web
+                workspace.
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/85">
+              <CardHeader>
                 <CardDescription>Task slice</CardDescription>
                 <CardTitle className="text-2xl">
                   {taskList.data.length} visible · {query.limit ?? DEFAULT_TASK_PAGE_SIZE} per page
@@ -354,6 +377,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                       Priority: {formatTaskPriorityLabel(query.priority)}
                     </Badge>
                   ) : null}
+                  {activeProject ? <Badge>Project: {activeProject.name}</Badge> : null}
                   {assigneeLabel ? <Badge>Assignee: {assigneeLabel}</Badge> : null}
                   {renderDateFilterBadge("Due after", query.due_after)}
                   {renderDateFilterBadge("Due before", query.due_before)}
@@ -386,6 +410,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                 initialQuery={query}
                 members={members}
                 nextCursor={taskList.next_cursor}
+                projects={projects}
               />
             </CardContent>
           </Card>
@@ -405,7 +430,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <CreateTaskForm members={members} />
+              <CreateTaskForm members={members} projects={projects} />
             </CardContent>
           </Card>
 
@@ -447,6 +472,15 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                       {task.description || "No description provided yet."}
                     </p>
                     <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                      {task.project_id ? (
+                        <Link
+                          className="inline-flex items-center gap-2 text-primary hover:underline"
+                          href={`/projects/${task.project_id}`}
+                        >
+                          <Layers3 className="h-4 w-4" />
+                          Project context
+                        </Link>
+                      ) : null}
                       <span className="inline-flex items-center gap-2">
                         <CalendarClock className="h-4 w-4" />
                         {formatTaskDateTime(task.due_at)}

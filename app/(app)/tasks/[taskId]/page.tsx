@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarClock, ChevronLeft, UserRound } from "lucide-react";
+import { CalendarClock, ChevronLeft, Layers3, UserRound } from "lucide-react";
 
 import { TaskDetailActions } from "@/components/tasks/task-detail-actions";
 import { TaskEditorForm } from "@/components/tasks/task-editor-form";
@@ -39,6 +39,7 @@ const priorityLabel: Record<TaskPriority, string> = {
 };
 
 interface LoadedTaskDetail {
+  projects: Awaited<ReturnType<typeof fluxaApi.listProjects>>;
   task: Awaited<ReturnType<typeof fluxaApi.getTask>>;
   audit: Awaited<ReturnType<typeof fluxaApi.listTaskAudit>>;
   members: Awaited<ReturnType<typeof fluxaApi.listTenantMembers>>;
@@ -62,12 +63,14 @@ function prettyJson(value: unknown) {
 async function loadTaskDetail(accessToken: string, taskId: string): Promise<LoadedTaskDetail> {
   try {
     const task = await fluxaApi.getTask(accessToken, taskId);
-    const [audit, members] = await Promise.all([
+    const [audit, members, projects] = await Promise.all([
       fluxaApi.listTaskAudit(accessToken, taskId),
       fluxaApi.listTenantMembers(accessToken, task.tenant_id),
+      fluxaApi.listProjects(accessToken),
     ]);
 
     return {
+      projects,
       task,
       audit,
       members,
@@ -93,8 +96,12 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
   }
 
   const { taskId } = await params;
-  const { task, audit, members } = await loadTaskDetail(session.accessToken, taskId);
+  const { task, audit, members, projects } = await loadTaskDetail(
+    session.accessToken,
+    taskId,
+  );
   const assignee = members.find((member) => member.user_id === task.assignee_id);
+  const project = projects.find((candidate) => candidate.id === task.project_id);
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-6 py-10 md:px-10">
@@ -142,6 +149,19 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <p className="inline-flex items-center gap-2">
                     <CalendarClock className="h-4 w-4 text-muted-foreground" />
                     {formatDateTime(task.due_at)}
+                  </p>
+                  <p className="inline-flex items-center gap-2">
+                    <Layers3 className="h-4 w-4 text-muted-foreground" />
+                    {project ? (
+                      <Link
+                        className="text-primary hover:underline"
+                        href={`/projects/${project.id}`}
+                      >
+                        {project.name}
+                      </Link>
+                    ) : (
+                      "No project"
+                    )}
                   </p>
                 </div>
               </div>
@@ -195,7 +215,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <TaskEditorForm members={members} task={task} />
+              <TaskEditorForm members={members} projects={projects} task={task} />
             </CardContent>
           </Card>
 
@@ -226,6 +246,12 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
               <p className="rounded-[20px] bg-background/70 p-4">
                 Tenant ID:{" "}
                 <span className="font-medium text-foreground">{task.tenant_id}</span>
+              </p>
+              <p className="rounded-[20px] bg-background/70 p-4">
+                Project ID:{" "}
+                <span className="font-medium text-foreground">
+                  {task.project_id ?? "No project"}
+                </span>
               </p>
             </CardContent>
           </Card>

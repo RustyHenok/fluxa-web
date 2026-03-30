@@ -73,6 +73,7 @@ export function parseTaskListQuery(
   const q = pick("q")?.trim();
   const status = pick("status");
   const priority = pick("priority");
+  const projectId = pick("project_id")?.trim();
   const assigneeId = pick("assignee_id")?.trim();
   const cursor = pick("cursor")?.trim();
   const dueBefore = pick("due_before")?.trim();
@@ -90,6 +91,10 @@ export function parseTaskListQuery(
 
   if (priority && TASK_PRIORITIES.includes(priority as TaskPriority)) {
     query.priority = priority as TaskPriority;
+  }
+
+  if (projectId) {
+    query.project_id = projectId;
   }
 
   if (assigneeId) {
@@ -124,6 +129,7 @@ export function countTaskFilters(query: ListTasksQuery) {
     query.q,
     query.status,
     query.priority,
+    query.project_id,
     query.assignee_id,
     query.due_before,
     query.due_after,

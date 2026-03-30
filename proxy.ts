@@ -17,7 +17,9 @@ export async function proxy(request: NextRequest) {
     request.cookies.get(ACTIVE_TENANT_COOKIE_NAME)?.value ?? null;
   const { pathname } = request.nextUrl;
   const isProtectedRoute =
-    pathname.startsWith("/tasks") || pathname.startsWith("/exports");
+    pathname.startsWith("/tasks") ||
+    pathname.startsWith("/exports") ||
+    pathname.startsWith("/projects");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
   if (!accessToken && refreshToken && (isProtectedRoute || isAuthRoute)) {
@@ -51,5 +53,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/register", "/tasks/:path*", "/exports/:path*"],
+  matcher: [
+    "/login",
+    "/register",
+    "/tasks/:path*",
+    "/exports/:path*",
+    "/projects/:path*",
+  ],
 };

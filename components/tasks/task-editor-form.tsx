@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import type {
+  ProjectResponse,
   TaskPatchPayload,
   TaskPriority,
   TaskResponse,
@@ -21,6 +22,7 @@ const TASK_PRIORITIES: TaskPriority[] = ["low", "medium", "high", "urgent"];
 
 interface TaskEditorFormProps {
   members: TenantMemberResponse[];
+  projects: ProjectResponse[];
   task: TaskResponse;
 }
 
@@ -28,9 +30,14 @@ function labelize(value: string) {
   return value.replaceAll("_", " ");
 }
 
-export function TaskEditorForm({ members, task }: TaskEditorFormProps) {
+export function TaskEditorForm({
+  members,
+  projects,
+  task,
+}: TaskEditorFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [projectId, setProjectId] = useState(task.project_id ?? "");
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [status, setStatus] = useState<TaskStatus>(task.status);
@@ -52,6 +59,7 @@ export function TaskEditorForm({ members, task }: TaskEditorFormProps) {
     setSuccess(null);
 
     const payload: TaskPatchPayload = {
+      project_id: projectId || null,
       title: title.trim(),
       description: description.trim() || null,
       status,
@@ -96,6 +104,22 @@ export function TaskEditorForm({ members, task }: TaskEditorFormProps) {
       </label>
 
       <div className="grid gap-4 md:grid-cols-2">
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Project</span>
+          <select
+            className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm"
+            value={projectId}
+            onChange={(event) => setProjectId(event.target.value)}
+          >
+            <option value="">No project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <label className="block space-y-2">
           <span className="text-sm font-medium">Status</span>
           <select
